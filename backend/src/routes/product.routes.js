@@ -5,8 +5,12 @@ import { authenticate, authorizeRoles } from "../middlewares/authMiddleware.js";
 
 const productRoutes = express.Router();
 
-productRoutes.post("/", 
-    upload.array("images", 5), productController.createProduct
+productRoutes.post("/",
+    authenticate,
+    authorizeRoles("Admin"),
+    upload.array("images", 5),
+    verifyImageContent,
+    productController.createProduct
 );
 
 productRoutes.get("/", productController.getAllProducts);
