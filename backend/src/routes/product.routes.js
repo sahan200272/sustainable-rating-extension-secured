@@ -9,7 +9,6 @@ productRoutes.post("/",
     authenticate,
     authorizeRoles("Admin"),
     upload.array("images", 5),
-    verifyImageContent,
     productController.createProduct
 );
 
