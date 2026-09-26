@@ -86,6 +86,48 @@ describe("Blog Service - Unit Tests", () => {
 
       expect(mockModerateBlogContent).not.toHaveBeenCalled();
     });
+
+    test("should safely handle regex metacharacters and ReDoS patterns without hanging", async () => {
+      const userId = "507f1f77bcf86cd799439015";
+      const redosPayload = "((((((((((a+)+)+)+)+)+)+)+)+)+)$";
+
+      mockBlogModel.findOne.mockResolvedValue(null);
+      mockModerateBlogContent.mockResolvedValue({
+        flagged: false,
+        score: 0,
+        reasons: []
+      });
+
+      const saveMock = jest.fn().mockResolvedValue(true);
+      const populateMock = jest.fn().mockResolvedValue(true);
+
+      mockBlogModel.mockImplementation((payload) => ({
+        ...payload,
+        save: saveMock,
+        populate: populateMock
+      }));
+
+      const startTime = Date.now();
+      const result = await blogService.createBlog(
+        {
+          title: redosPayload,
+          content: "Valid blog content for testing",
+          category: "Responsible Consumption"
+        },
+        userId
+      );
+      const duration = Date.now() - startTime;
+
+      expect(duration).toBeLessThan(1000);
+      expect(mockBlogModel.findOne).toHaveBeenCalledWith({
+        title: {
+          $regex: `^\\(\\(\\(\\(\\(\\(\\(\\(\\(\\(a\\+\\)\\+\\)\\+\\)\\+\\)\\+\\)\\+\\)\\+\\)\\+\\)\\+\\)\\+\\)\\$$`,
+          $options: "i"
+        },
+        author: userId
+      });
+      expect(result.status).toBe("PENDING");
+    }, 3000);
   });
 
   // Test published blog listing with filters.
