@@ -376,34 +376,73 @@ export async function sendOTP(req, res) {
         });
     }
 }
+    // Controller function to verify OTP for authenticated user
+    export async function verifyOTP(req, res) {
+        try {
+            const { code } = req.body;
 
-// Controller function to verify OTP for authenticated user
-export async function verifyOTP(req, res) {
-    try {
-        const { code } = req.body;
+            if (code === undefined || code === null || code === '') {
+                return res.status(400).json({
+                    error: 'OTP code is required'
+                });
+            }
 
-        await userService.verifyOtpForUser(req.user.email, code);
+            await userService.verifyOtpForUser(
+                req.user.email,
+                code
+            );
 
-        return res.status(200).json({
-            message: 'Email verified successfully'
-        });
-    } catch (error) {
-        console.error('Verify OTP error:', error);
+            return res.status(200).json({
+                message: 'Email verified successfully'
+            });
 
-        if (error.message === 'Invalid OTP code') {
-            return res.status(400).json({
-                error: 'Invalid OTP. Please try again.'
+        } catch (error) {
+            console.error('Verify OTP error:', error);
+
+            if (error.message === 'Invalid OTP code') {
+                return res.status(400).json({
+                    error: 'Invalid OTP. Please try again.'
+                });
+            }
+
+            if (
+                error.message === 'OTP not found' ||
+                error.message === 'OTP not found or expired' ||
+                error.message === 'OTP expired'
+            ) {
+                return res.status(400).json({
+                    error: 'OTP not found or expired. Please request a new one.'
+                });
+            }
+
+            // OTP is already locked from previous attempts
+            if (
+                error.message ===
+                'OTP verification locked. Please request a new OTP.'
+            ) {
+                return res.status(429).json({
+                    error: 'OTP verification locked. Please request a new OTP.'
+                });
+            }
+
+            // This is the fifth incorrect attempt
+            if (
+                error.message ===
+                'Too many incorrect OTP attempts. Please request a new OTP.'
+            ) {
+                return res.status(429).json({
+                    error: 'Too many incorrect OTP attempts. Please request a new OTP.'
+                });
+            }
+
+            if (error.message === 'User not found') {
+                return res.status(404).json({
+                    error: 'User not found'
+                });
+            }
+
+            return res.status(500).json({
+                error: 'Failed to verify OTP'
             });
         }
-
-        if (error.message === 'OTP not found') {
-            return res.status(400).json({
-                error: 'No OTP found. Please request a new one.'
-            });
-        }
-
-        return res.status(500).json({
-            error: 'Failed to verify OTP'
-        });
     }
-}

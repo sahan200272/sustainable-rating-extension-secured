@@ -15,6 +15,11 @@ import {
 } from '../controllers/user.controller.js';
 import { authenticate, isAdmin } from '../middlewares/authMiddleware.js';
 
+import {
+    sendOtpRateLimiter,
+    verifyOtpRateLimiter
+} from '../middlewares/otpRateLimiter.js';
+
 const userRouter = express.Router();
 
 //Register route
@@ -36,8 +41,8 @@ userRouter.get('/me', authenticate, getUser);
 userRouter.patch('/me', authenticate, updateProfile);
 
 // Email verification routes (authenticated user)
-userRouter.post('/send-otp', authenticate, sendOTP);
-userRouter.post('/verify-otp', authenticate, verifyOTP);
+userRouter.post('/send-otp', authenticate, sendOtpRateLimiter, sendOTP);
+userRouter.post('/verify-otp', authenticate, verifyOtpRateLimiter, verifyOTP);
 
 // Admin-only routes
 userRouter.post('/admin/getUserByEmail', authenticate, isAdmin, getUserByEmailAdmin);
