@@ -341,10 +341,11 @@ export async function loginWithGoogle(req, res) {
 
         if (
             error.message === 'Google account email not available' ||
+            error.message === 'Invalid Google ID token' ||
             error.response?.status === 401
         ) {
             return res.status(401).json({
-                error: 'Invalid Google access token'
+                error: 'Invalid Google ID token'
             });
         }
 
