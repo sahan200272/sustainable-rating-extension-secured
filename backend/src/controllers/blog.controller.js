@@ -356,45 +356,14 @@ export async function createBlogLegacy(req, res, next) {
     }
 }
 
-// Get all blogs (Legacy - no status filtering)
+// Get all blogs (Legacy - reuses published blog listing)
 export async function getAllBlogsLegacy(req, res, next) {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const category = req.query.category;
-        const search = req.query.search;
-
-        // Call service
-        const result = await blogService.getAllBlogsService({ page, limit, category, search });
-
-        res.status(200).json(result);
-    } catch (error) {
-        console.error("Error fetching blogs:", error);
-        next(error);
-    }
+    return getAllBlogs(req, res, next);
 }
 
-// Get blog by ID (Legacy - no access control)
+// Get blog by ID (Legacy - reuses status-based access control)
 export async function getBlogByIdLegacy(req, res, next) {
-    try {
-        const { id } = req.params;
-
-        // Call service
-        const blog = await blogService.getBlogByIdService(id);
-
-        res.status(200).json({
-            blog
-        });
-    } catch (error) {
-        console.error("Error fetching blog:", error);
-        if (error.message === "Invalid blog ID") {
-            return res.status(400).json({ error: error.message });
-        }
-        if (error.message === "Blog not found") {
-            return res.status(404).json({ error: error.message });
-        }
-        next(error);
-    }
+    return getBlogById(req, res, next);
 }
 
 // Update blog (Admin only)
