@@ -63,8 +63,8 @@ blogRouter.put('/:id', authenticate, authorizeRoles('Admin'), updateBlog); // PU
 blogRouter.delete('/:id', authenticate, authorizeRoles('Admin'), deleteBlog); // DELETE /api/blogs/:id
 
 // Legacy public routes
-blogRouter.get('/legacy/all', getAllBlogsLegacy); // GET /api/blogs/legacy/all - no status filtering
-blogRouter.get('/legacy/:id', getBlogByIdLegacy); // GET /api/blogs/legacy/:id - no access control
+blogRouter.get('/legacy/all', getAllBlogsLegacy); // GET /api/blogs/legacy/all - reuses published blog listing
+blogRouter.get('/legacy/:id', optionalAuthenticate, getBlogByIdLegacy); // GET /api/blogs/legacy/:id - reuses status access control
 
 // =================== ENGAGEMENT ROUTES ===================
 
