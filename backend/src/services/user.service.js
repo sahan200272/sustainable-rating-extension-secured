@@ -3,8 +3,10 @@ import bcrypt from 'bcrypt';
 import axios from 'axios';
 import nodemailer from 'nodemailer';
 import OTP from '../models/otp.js';
-import jwt from 'jsonwebtoken';
 import { generateOtpEmailTemplate } from '../utils/emailTemplates.js';
+import { OAuth2Client } from 'google-auth-library';
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 function getTransport() {
     return nodemailer.createTransport({
@@ -181,6 +183,7 @@ export async function loginWithGoogle(accessToken) {
 
     let userDetails;
     
+    /*
     // Check if it's a JWT (ID token)
     const decodedToken = jwt.decode(accessToken);
     if (decodedToken && decodedToken.email) {
@@ -200,7 +203,34 @@ export async function loginWithGoogle(accessToken) {
             }
         });
         userDetails = response.data;
+    } */
+
+
+    // Verify Google ID token before trusting its claims
+    try {
+        const ticket = await googleClient.verifyIdToken({
+            idToken: accessToken,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+
+        const payload = ticket.getPayload();
+
+        if (!payload?.email) {
+            throw new Error('Google account email not available');
+        }
+
+        userDetails = {
+            email: payload.email,
+            name: payload.name,
+            given_name: payload.given_name,
+            family_name: payload.family_name,
+            picture: payload.picture,
+            email_verified: payload.email_verified
+        };
+    } catch (error) {
+        throw new Error('Invalid Google ID token');
     }
+
 
     if (!userDetails?.email) {
         throw new Error('Google account email not available');
