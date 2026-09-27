@@ -6,16 +6,39 @@ const OTPSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
+
     otp: {
         type: Number,
         required: true
     },
+
+    failedAttempts: {
+        type: Number,
+        default: 0
+    },
+
+    lockedUntil: {
+        type: Date,
+        default: null
+    },
+
     createdAt: {
         type: Date,
-        default: Date.now,
-        expires: 300 // OTP expires after 5 minutes
+        default: Date.now
+    },
+
+    expiresAt: {
+        type: Date,
+        required: true,
+        index: true
     }
 });
+
+// Automatically delete OTP documents when expiresAt is reached.
+OTPSchema.index(
+    { expiresAt: 1 },
+    { expireAfterSeconds: 0 }
+);
 
 const OTP = mongoose.model("OTP", OTPSchema);
 

@@ -2,6 +2,14 @@ import Blog from '../models/blog.js';
 import mongoose from 'mongoose';
 import { moderateBlogContent } from './blog-ai.service.js';
 
+/**
+ * Safely escapes special regex characters in user input to prevent ReDoS and regex injection.
+ */
+export function escapeRegex(string) {
+    if (typeof string !== 'string') return '';
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 // Service function to create a new blog
 export async function createBlogService(blogData) {
     const { title, content, category, tags, author, imageUrl, imageUrls, isFeatured } = blogData;
@@ -47,8 +55,9 @@ export async function createBlog(data, userId) {
     }
 
     // Check for duplicate posts (same title by same author)
+    const escapedTitle = escapeRegex(title.trim());
     const existingBlog = await Blog.findOne({
-        title: { $regex: new RegExp(`^${title.trim()}$`, 'i') }, // Case-insensitive exact match
+        title: { $regex: `^${escapedTitle}$`, $options: 'i' }, // Case-insensitive exact match
         author: userId
     });
 
@@ -91,7 +100,7 @@ export async function getPublishedBlogs({ page = 1, limit = 10, category, search
     }
     
     if (search) {
-        filter.title = { $regex: search, $options: 'i' };
+        filter.title = { $regex: escapeRegex(search), $options: 'i' };
     }
 
     const skip = (page - 1) * limit;
@@ -165,7 +174,7 @@ export async function getBlogsForAdmin({ page = 1, limit = 10, status, search })
     }
     
     if (search) {
-        filter.title = { $regex: search, $options: 'i' };
+        filter.title = { $regex: escapeRegex(search), $options: 'i' };
     }
 
     const skip = (page - 1) * limit;
@@ -312,9 +321,10 @@ export async function getAllBlogsService({ page = 1, limit = 10, category, searc
     }
     
     if (search) {
+        const escapedSearch = escapeRegex(search);
         filter.$or = [
-            { title: { $regex: search, $options: 'i' } },
-            { content: { $regex: search, $options: 'i' } }
+            { title: { $regex: escapedSearch, $options: 'i' } },
+            { content: { $regex: escapedSearch, $options: 'i' } }
         ];
     }
 

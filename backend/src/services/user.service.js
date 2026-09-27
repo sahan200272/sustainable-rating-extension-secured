@@ -1,10 +1,13 @@
 import User from '../models/user.js';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import axios from 'axios';
 import nodemailer from 'nodemailer';
 import OTP from '../models/otp.js';
-import jwt from 'jsonwebtoken';
 import { generateOtpEmailTemplate } from '../utils/emailTemplates.js';
+import { OAuth2Client } from 'google-auth-library';
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 function getTransport() {
     return nodemailer.createTransport({
@@ -181,6 +184,7 @@ export async function loginWithGoogle(accessToken) {
 
     let userDetails;
     
+    /*
     // Check if it's a JWT (ID token)
     const decodedToken = jwt.decode(accessToken);
     if (decodedToken && decodedToken.email) {
@@ -200,7 +204,34 @@ export async function loginWithGoogle(accessToken) {
             }
         });
         userDetails = response.data;
+    } */
+
+
+    // Verify Google ID token before trusting its claims
+    try {
+        const ticket = await googleClient.verifyIdToken({
+            idToken: accessToken,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+
+        const payload = ticket.getPayload();
+
+        if (!payload?.email) {
+            throw new Error('Google account email not available');
+        }
+
+        userDetails = {
+            email: payload.email,
+            name: payload.name,
+            given_name: payload.given_name,
+            family_name: payload.family_name,
+            picture: payload.picture,
+            email_verified: payload.email_verified
+        };
+    } catch (error) {
+        throw new Error('Invalid Google ID token');
     }
+
 
     if (!userDetails?.email) {
         throw new Error('Google account email not available');
@@ -253,13 +284,22 @@ export async function sendOtpForUser(email) {
     const expiryMs   = expiryMins * 60 * 1000;
 
     // Generate a cryptographically sufficient 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000);
+    const otp = crypto.randomInt(100000, 1000000);
 
-    // Upsert OTP document; TTL index on the model uses createdAt
     await OTP.findOneAndUpdate(
         { email },
-        { otp, createdAt: new Date(), expiresAt: new Date(Date.now() + expiryMs) },
-        { upsert: true, new: true }
+        {
+            otp,
+            createdAt: new Date(),
+            expiresAt: new Date(Date.now() + expiryMs),
+            failedAttempts: 0,
+            lockedUntil: null
+        },
+        {
+            upsert: true,
+            new: true,
+            setDefaultsOnInsert: true
+        }
     );
 
     const appName = process.env.APP_NAME || 'Greeny';
@@ -290,23 +330,69 @@ export async function sendOtpForUser(email) {
     }
 }
 
-// Service function to verify OTP and mark email as verified
-export async function verifyOtpForUser(email, code) {
-    if (!email) {
-        throw new Error('Email is required');
-    }
+    export async function verifyOtpForUser(email, code) {
+        if (!email) {
+            throw new Error('Email is required');
+        }
 
-    const numericCode = Number(code);
-    if (!numericCode || Number.isNaN(numericCode)) {
+        const numericCode = Number(code);
+
+        if (
+            !Number.isInteger(numericCode) ||
+            numericCode < 100000 ||
+            numericCode > 999999
+        ) {
+            throw new Error('Invalid OTP code');
+        }
+
+        const otp = await OTP.findOne({ email });
+
+        if (!otp) {
+            throw new Error('OTP not found or expired');
+        }
+
+        // Check OTP expiry explicitly.
+        // MongoDB TTL deletion may not happen immediately.
+        if (otp.expiresAt && otp.expiresAt <= new Date()) {
+            await OTP.deleteOne({ email });
+            throw new Error('OTP expired');
+        }
+
+        // Check whether this OTP is locked.
+        if (otp.lockedUntil && otp.lockedUntil > new Date()) {
+            throw new Error(
+                'OTP verification locked. Please request a new OTP.'
+            );
+        }
+
+        // Correct OTP
+        if (otp.otp === numericCode) {
+            await User.updateOne(
+                { email },
+                { emailVerified: true }
+            );
+
+            // OTP is single-use.
+            await OTP.deleteOne({ email });
+
+            return;
+        }
+
+        // Incorrect OTP
+        const newFailedAttempts = otp.failedAttempts + 1;
+
+        if (newFailedAttempts >= 5) {
+            otp.failedAttempts = newFailedAttempts;
+            otp.lockedUntil = otp.expiresAt;
+            await otp.save();
+
+            throw new Error(
+                'Too many incorrect OTP attempts. Please request a new OTP.'
+            );
+        }
+
+        otp.failedAttempts = newFailedAttempts;
+        await otp.save();
+
         throw new Error('Invalid OTP code');
     }
-
-    const otp = await OTP.findOne({ email, otp: numericCode });
-
-    if (!otp) {
-        throw new Error('OTP not found');
-    }
-
-    await User.updateOne({ email }, { emailVerified: true });
-    await OTP.deleteOne({ email });
-}
