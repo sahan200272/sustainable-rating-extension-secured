@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { loginUser } from "../../services/userService";
 import { sendOtp } from "../../services/authService";
 import { useAuth } from "../../hooks/useAuth";
@@ -20,16 +20,44 @@ const STATS = [
 
 const TRUST_ICONS = ["🌿", "🌍", "♻️"];
 
+// Codes the backend sends back as ?oauth_error= after a failed Google sign-in
+const OAUTH_ERROR_MESSAGES = {
+    access_denied: "Google sign-in was cancelled.",
+    account_blocked: "Your Account is blocked. Please contact support.",
+    account_not_verified: "An account with this email already exists but isn't verified yet. Log in with your password and verify your email first, then you can use Google sign-in.",
+    account_conflict: "This email is already linked to a different Google account.",
+    email_not_verified: "Your Google email address isn't verified.",
+    session_expired: "Your Google sign-in session expired. Please try again.",
+    rate_limited: "Too many sign-in attempts. Please try again later.",
+};
+
 export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+    const [searchParams, setSearchParams] = useSearchParams();
     const { values, handleChange } = useForm(INITIAL_VALUES);
 
     const redirectTarget = location.state?.from?.pathname
         ? `${location.state.from.pathname}${location.state.from.search || ""}`
         : location.state?.redirectTo;
+
+    const oauthError = searchParams.get("oauth_error");
+
+    useEffect(() => {
+        if (!oauthError) return;
+
+        // hasOwn so a crafted ?oauth_error=constructor can't pull in Object.prototype members
+        const message = Object.hasOwn(OAUTH_ERROR_MESSAGES, oauthError)
+            ? OAUTH_ERROR_MESSAGES[oauthError]
+            : "Google sign-in failed. Please try again.";
+
+        // Fixed id so StrictMode's double effect doesn't stack two toasts
+        toast.error(message, { id: "oauth-error", duration: 8000 });
+        // Drop the param so a refresh doesn't show the error again
+        setSearchParams({}, { replace: true });
+    }, [oauthError, setSearchParams]);
 
     const handleOnSubmit = async (e) => {
         e.preventDefault();

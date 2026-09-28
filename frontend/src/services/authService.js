@@ -20,3 +20,13 @@ export const verifyOtp = async (code) => {
     const response = await api.post("/api/users/verify-otp", { code });
     return response.data;
 };
+
+/**
+ * Swap the one-time ticket from the Google sign-in redirect for a Greeny session.
+ * @param {string} ticket - Ticket from the /oauth/callback URL fragment
+ * @returns {Promise} Response from the API — contains { message, token, user }.
+ */
+export const exchangeGoogleTicket = async (ticket) => {
+    const response = await api.post("/api/auth/google/exchange", { ticket });
+    return response.data;
+};

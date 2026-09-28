@@ -13,6 +13,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import ProductsListPage from "../pages/product/ProductsListPage";
 import ProductDetailsPage from "../pages/product/ProductDetailsPage";
 import VerifyOtpPage from "../pages/login/VerifyOtpPage";
+import OAuthCallbackPage from "../pages/login/OAuthCallbackPage";
 import ComparePage from "../pages/compare/ComparePage";
 import ComparisonHistoryPage from "../pages/compare/ComparisonHistoryPage";
 import ComparisonDetailPage from "../pages/compare/ComparisonDetailPage";
@@ -44,6 +45,7 @@ export default function AppRoutes() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/verify-otp" element={<VerifyOtpPage />} />
+            <Route path="/oauth/callback" element={<OAuthCallbackPage />} />
 
             {/* ── Admin routes — AdminLayout only, ProtectedRoute at layout level ── */}
             <Route
