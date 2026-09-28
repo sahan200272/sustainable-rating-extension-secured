@@ -2,7 +2,6 @@ import express from 'express';
 import {
 	registerUser,
 	loginUser,
-	loginWithGoogle,
 	getUser,
 	getUserByEmailAdmin,
 	getAllUsers,
@@ -27,9 +26,6 @@ userRouter.post('/register', registerUser);
 
 //Login route
 userRouter.post('/login', loginUser);
-
-// Google login route
-userRouter.post('/google-login', loginWithGoogle);
 
 //Get user details (for both Admin and Customer)
 userRouter.get('/getUser', authenticate, getUser);

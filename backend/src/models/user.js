@@ -48,6 +48,13 @@ const userSchema = new mongoose.Schema ({
         type : Boolean,
         required : true,
         default : false
+    },
+
+    // Google's stable account id ("sub"), set once the account is linked
+    googleSub : {
+        type : String,
+        unique : true,
+        sparse : true
     }
 });
 

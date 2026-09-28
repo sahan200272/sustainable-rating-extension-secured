@@ -5,6 +5,7 @@ import helmet from "helmet";
 import connectDB from "./config/db.js";
 import errorHandler from "./middlewares/errorHandler.js";
 import userRoutes from "./routes/user.routes.js";
+import authRoutes from "./routes/auth.routes.js";
 import blogRoutes from "./routes/blog.routes.js";
 import productRoutes from "./routes/product.routes.js";
 import comparisonRoutes from './routes/comparison.routes.js';
@@ -95,6 +96,7 @@ app.use(express.json());
 
 // Routes
 app.use("/api/users", userRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/reviews", reviewRoutes);

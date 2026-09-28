@@ -1,13 +1,9 @@
 import User from '../models/user.js';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-import axios from 'axios';
 import nodemailer from 'nodemailer';
 import OTP from '../models/otp.js';
 import { generateOtpEmailTemplate } from '../utils/emailTemplates.js';
-import { OAuth2Client } from 'google-auth-library';
-
-const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 function getTransport() {
     return nodemailer.createTransport({
@@ -21,23 +17,10 @@ function getTransport() {
     });
 }
 
-function sanitizeUser(user) {
+export function sanitizeUser(user) {
     const userObj = user.toObject();
     delete userObj.password;
     return userObj;
-}
-
-function splitGoogleName(name = '') {
-    const trimmed = name.trim();
-    if (!trimmed) {
-        return { firstName: 'Google', lastName: 'User' };
-    }
-
-    const [firstName, ...rest] = trimmed.split(' ');
-    return {
-        firstName,
-        lastName: rest.join(' ') || 'User'
-    };
 }
 
 // Service function to register a new user
@@ -175,98 +158,6 @@ export async function updateUserRoleByEmail(email, role) {
     }
 
     return sanitizeUser(user);
-}
-
-export async function loginWithGoogle(accessToken) {
-    if (!accessToken) {
-        throw new Error('Access token is required');
-    }
-
-    let userDetails;
-    
-    /*
-    // Check if it's a JWT (ID token)
-    const decodedToken = jwt.decode(accessToken);
-    if (decodedToken && decodedToken.email) {
-        userDetails = {
-            email: decodedToken.email,
-            name: decodedToken.name,
-            given_name: decodedToken.given_name,
-            family_name: decodedToken.family_name,
-            picture: decodedToken.picture,
-            email_verified: decodedToken.email_verified
-        };
-    } else {
-        // Fallback for proper access token
-        const response = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
-            headers: {
-                Authorization: `Bearer ${accessToken}`
-            }
-        });
-        userDetails = response.data;
-    } */
-
-
-    // Verify Google ID token before trusting its claims
-    try {
-        const ticket = await googleClient.verifyIdToken({
-            idToken: accessToken,
-            audience: process.env.GOOGLE_CLIENT_ID
-        });
-
-        const payload = ticket.getPayload();
-
-        if (!payload?.email) {
-            throw new Error('Google account email not available');
-        }
-
-        userDetails = {
-            email: payload.email,
-            name: payload.name,
-            given_name: payload.given_name,
-            family_name: payload.family_name,
-            picture: payload.picture,
-            email_verified: payload.email_verified
-        };
-    } catch (error) {
-        throw new Error('Invalid Google ID token');
-    }
-
-
-    if (!userDetails?.email) {
-        throw new Error('Google account email not available');
-    }
-
-    let user = await User.findOne({ email: userDetails.email });
-    let isNewUser = false;
-
-    if (!user) {
-        const fallbackName = splitGoogleName(userDetails.name);
-        user = new User({
-            firstName: userDetails.given_name || fallbackName.firstName,
-            lastName: userDetails.family_name || fallbackName.lastName,
-            email: userDetails.email,
-            password: bcrypt.hashSync(Math.random().toString(36), 10),
-            profilePicture: userDetails.picture || undefined,
-            address: 'Not Given',
-            phone: 'Not Given',
-            role: 'Customer',
-            isBlocked: false,
-            emailVerified: Boolean(userDetails.email_verified)
-        });
-
-        await user.save();
-        isNewUser = true;
-    }
-
-    if (user.isBlocked) {
-        throw new Error('Account is blocked');
-    }
-
-    return {
-        user: sanitizeUser(user),
-        isNewUser
-    };
 }
 
 // Service function to generate and send an OTP to the user's email

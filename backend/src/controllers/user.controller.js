@@ -1,5 +1,5 @@
 import * as userService from '../services/user.service.js';
-import jwt from 'jsonwebtoken';
+import { signAppToken } from '../utils/authToken.js';
 
 // Controller function to register a new user
 export async function registerUser(req, res) {
@@ -50,20 +50,7 @@ export async function loginUser(req, res) {
         const user = await userService.loginUser(req.body);
 
         // Generate JWT token
-        const token = jwt.sign(
-            {
-                id: user._id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                role: user.role,
-                profilePicture: user.profilePicture,
-                phone: user.phone,
-                emailVerified: user.emailVerified
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: '24h' }
-        );
+        const token = signAppToken(user);
 
         res.status(200).json({
             message: "Login Successful!",
@@ -288,70 +275,6 @@ export async function updateUserRole(req, res) {
         }
 
         return res.status(500).json({ error: 'Failed to update user role' });
-    }
-}
-
-// Controller function to login/register user via Google
-export async function loginWithGoogle(req, res) {
-    try {
-        const { accessToken } = req.body;
-
-        if (!accessToken) {
-            return res.status(400).json({
-                error: 'Google access token is required'
-            });
-        }
-
-        const { user, isNewUser } = await userService.loginWithGoogle(accessToken);
-
-        const token = jwt.sign(
-            {
-                id: user._id,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                email: user.email,
-                role: user.role,
-                profilePicture: user.profilePicture,
-                phone: user.phone,
-                emailVerified: user.emailVerified
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: '24h' }
-        );
-
-        return res.status(200).json({
-            message: isNewUser
-                ? 'User registered and logged in successfully!'
-                : 'Login Successful!',
-            token,
-            user
-        });
-    } catch (error) {
-        console.error('Google login error:', error);
-
-        if (error.message === 'Access token is required') {
-            return res.status(400).json({ error: error.message });
-        }
-
-        if (error.message === 'Account is blocked') {
-            return res.status(403).json({
-                error: 'Your Account is blocked. Please contact support.'
-            });
-        }
-
-        if (
-            error.message === 'Google account email not available' ||
-            error.message === 'Invalid Google ID token' ||
-            error.response?.status === 401
-        ) {
-            return res.status(401).json({
-                error: 'Invalid Google ID token'
-            });
-        }
-
-        return res.status(500).json({
-            error: 'Failed to Login with Google'
-        });
     }
 }
 
