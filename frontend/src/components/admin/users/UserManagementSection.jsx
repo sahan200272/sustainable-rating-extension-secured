@@ -1,6 +1,7 @@
 import { FiUserPlus, FiRefreshCw, FiUsers } from "react-icons/fi";
 import AdminPageHeader from "../AdminPageHeader";
-import { UserManagementProvider, useUserManagement } from "../../../context/UserManagementContext";
+import { UserManagementProvider } from "../../../context/UserManagementProvider";
+import { useUserManagement } from "../../../context/UserManagementContext";
 import UserTableFilters from "./UserTableFilters";
 import DataTable from "./DataTable";
 import BulkActionBar from "./BulkActionBar";

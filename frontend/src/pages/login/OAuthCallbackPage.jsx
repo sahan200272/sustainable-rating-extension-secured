@@ -68,7 +68,7 @@ export default function OAuthCallbackPage() {
     }, [ticket, login, navigate]);
 
     return (
-        <div className="h-screen flex flex-col items-center justify-center gap-5 bg-gradient-to-b from-emerald-50 to-white px-6">
+        <div className="h-screen flex flex-col items-center justify-center gap-5 bg-linear-to-b from-emerald-50 to-white px-6">
             <img src={GREENVY_LOGO_URL} alt={GREENVY_LOGO_ALT} className="w-12 h-12 object-contain" />
             <svg className="animate-spin h-6 w-6 text-emerald-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />

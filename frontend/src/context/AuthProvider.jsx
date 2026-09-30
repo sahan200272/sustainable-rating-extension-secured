@@ -1,6 +1,5 @@
-import { createContext, useState, useCallback } from "react";
-
-export const AuthContext = createContext(null);
+import { useState, useCallback } from "react";
+import { AuthContext } from "./AuthContext";
 
 function getStoredUserSafely() {
     const stored = localStorage.getItem("user");

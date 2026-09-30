@@ -104,7 +104,7 @@ export default function LoginPage() {
                 className="hidden lg:flex lg:w-[55%] relative flex-col justify-between overflow-hidden"
                 style={{ backgroundImage: `url(${bgImage})`, backgroundSize: "cover", backgroundPosition: "center" }}
             >
-                <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/85 via-green-900/75 to-teal-800/65" />
+                <div className="absolute inset-0 bg-linear-to-br from-emerald-950/85 via-green-900/75 to-teal-800/65" />
                 <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-emerald-400/10 blur-3xl" />
                 <div className="absolute bottom-0 right-0 w-80 h-80 rounded-full bg-teal-400/10 blur-3xl" />
 
@@ -125,7 +125,7 @@ export default function LoginPage() {
                     <div>
                         <h1 className="text-4xl lg:text-5xl xl:text-6xl font-black text-white leading-[1.1] tracking-tight">
                             Welcome<br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-teal-300">back.</span>
+                            <span className="text-transparent bg-clip-text bg-linear-to-r from-emerald-300 to-teal-300">back.</span>
                         </h1>
                         <p className="mt-4 lg:mt-5 text-sm lg:text-base text-emerald-100/80 leading-relaxed max-w-sm lg:max-w-md">
                             Continue making sustainable choices that matter — for you and the planet.
@@ -155,7 +155,7 @@ export default function LoginPage() {
             </div>
 
             {/* RIGHT PANEL */}
-            <div className="flex-1 flex flex-col justify-center items-center bg-gradient-to-b from-emerald-50 to-white px-6 lg:px-12 overflow-hidden">
+            <div className="flex-1 flex flex-col justify-center items-center bg-linear-to-b from-emerald-50 to-white px-6 lg:px-12 overflow-hidden">
                 <div className="w-full max-w-md lg:max-w-lg">
 
                     {/* Mobile brand */}
@@ -189,7 +189,7 @@ export default function LoginPage() {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-3 lg:py-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm lg:text-base tracking-wide shadow-lg shadow-emerald-500/30 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mt-1"
+                            className="w-full py-3 lg:py-4 rounded-xl bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-sm lg:text-base tracking-wide shadow-lg shadow-emerald-500/30 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 mt-1"
                         >
                             {loading ? (
                                 <span className="flex items-center justify-center gap-2">
@@ -203,9 +203,9 @@ export default function LoginPage() {
                         </button>
 
                         <div className="relative flex items-center py-2">
-                            <div className="flex-grow border-t border-gray-200"></div>
-                            <span className="flex-shrink-0 mx-4 text-gray-400 text-xs font-semibold uppercase tracking-wider">or</span>
-                            <div className="flex-grow border-t border-gray-200"></div>
+                            <div className="grow border-t border-gray-200"></div>
+                            <span className="shrink-0 mx-4 text-gray-400 text-xs font-semibold uppercase tracking-wider">or</span>
+                            <div className="grow border-t border-gray-200"></div>
                         </div>
 
                         <GoogleLoginBtn />

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import {
     adminCreateUser,
@@ -7,8 +7,7 @@ import {
     adminToggleBlockUser,
     adminUpdateUserRole,
 } from "../services/userService";
-
-const UserManagementContext = createContext(null);
+import { UserManagementContext } from "./UserManagementContext";
 
 export function UserManagementProvider({ children }) {
     const [users, setUsers] = useState([]);
@@ -322,10 +321,4 @@ export function UserManagementProvider({ children }) {
             {children}
         </UserManagementContext.Provider>
     );
-}
-
-export function useUserManagement() {
-    const ctx = useContext(UserManagementContext);
-    if (!ctx) throw new Error("useUserManagement must be used inside UserManagementProvider");
-    return ctx;
 }
