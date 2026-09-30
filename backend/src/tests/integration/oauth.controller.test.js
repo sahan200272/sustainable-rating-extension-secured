@@ -39,7 +39,7 @@ const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 
 process.env.GOOGLE_CLIENT_ID = CLIENT_ID;
 process.env.GOOGLE_CLIENT_SECRET = "test-client-secret";
-process.env.GOOGLE_REDIRECT_URI = "http://localhost:5000/api/auth/google/callback";
+process.env.GOOGLE_REDIRECT_URI = "http://localhost:3000/api/auth/google/callback";
 process.env.FRONTEND_URL = FRONTEND_URL;
 process.env.JWT_SECRET = "test-jwt-secret";
 
